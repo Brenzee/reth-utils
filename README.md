@@ -18,8 +18,8 @@ Token: USDC (multiple storage slots touched, determines the best one)
 
 ```
 ✅ Successful queries: 100
-⏱ Total time: 15.517448ms
-📊 Average time per successful call: 155.174µs
+⏱ Total time: 18.281425ms
+📊 Average time per successful call: 182.814µs
 ```
 
 #### `find_slot_mapping` example
