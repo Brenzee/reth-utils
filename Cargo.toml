@@ -1,0 +1,18 @@
+[package]
+name = "reth-utils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reth = { git = "https://github.com/paradigmxyz/reth", rev = "ed7da87" }
+reth-db = { git = "https://github.com/paradigmxyz/reth", package = "reth-db", rev = "ed7da87" }
+reth-revm = { git = "https://github.com/paradigmxyz/reth", package = "reth-revm", rev = "ed7da87" }
+reth-chainspec = { git = "https://github.com/paradigmxyz/reth", package = "reth-chainspec", rev = "ed7da87" }
+reth-node-ethereum = { git = "https://github.com/paradigmxyz/reth", package = "reth-node-ethereum", rev = "ed7da87" }
+
+serde = "1.0.218"
+alloy = { version = "0.13.0", features = ["full"] }
+revm = "21.0.0"
+revm-inspectors = "0.18.0"
+tokio = { version = "1.0", features = ["full"] }
+eyre = "0.6"
