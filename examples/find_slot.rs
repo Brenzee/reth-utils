@@ -53,7 +53,7 @@ fn main() -> eyre::Result<()> {
 
     if successful > 0 {
         let avg = total_duration / successful;
-        println!("\n✅ Successful queries: {successful}");
+        println!("\nQueries: {successful}");
         println!("⏱ Total time: {:?}", total_duration);
         println!("⏱ First call time: {:?}", first_call_duration);
         println!("📊 Average time per successful call: {:?}", avg);

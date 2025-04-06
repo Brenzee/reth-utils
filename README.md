@@ -9,7 +9,7 @@ Examples ran on release build.
 Token: WETH (only 1 storage slot touched)
 
 ```
-✅ Successful queries: 100
+Queries: 100
 ⏱ Total time: 11.271966ms
 ⏱ First call time: 238.797µs
 📊 Average time per successful call: 112.719µs
@@ -18,7 +18,7 @@ Token: WETH (only 1 storage slot touched)
 Token: USDC (multiple storage slots touched, determines the best one)
 
 ```
-✅ Successful queries: 100
+Queries: 100
 ⏱ Total time: 18.260411ms
 ⏱ First call time: 470.98µs
 📊 Average time per successful call: 182.604µs
@@ -29,7 +29,7 @@ Token: USDC (multiple storage slots touched, determines the best one)
 Token: WETH
 
 ```
-✅ Successful queries: 100
+Queries: 100
 ⏱ Total time: 38.825µs
 📊 Average time per successful call: 388ns
 ```
