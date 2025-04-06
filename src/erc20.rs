@@ -5,13 +5,18 @@ use alloy::{
     sol_types::{SolCall, SolValue},
 };
 use eyre::eyre;
+use reth::providers::StateProvider;
 use reth_revm::{
     database::StateProviderDatabase,
     db::{CacheDB, StateBuilder},
 };
 use revm::{
     context::result::ExecutionResult,
-    primitives::{address, keccak256, Address, FixedBytes, TxKind, B256, U256},
+    primitives::{
+        address, keccak256, map::foldhash::fast::RandomState, Address, FixedBytes, TxKind, B256,
+        U256,
+    },
+    state::Account,
     Context, ExecuteEvm, MainBuilder, MainContext,
 };
 use serde::Serialize;
@@ -27,6 +32,7 @@ sol! {
 }
 
 pub type MappingIndexCache = HashMap<Address, U256>;
+pub type RevmDb = CacheDB<StateProviderDatabase<Box<dyn StateProvider>>>;
 
 #[derive(Serialize, Debug)]
 pub struct Erc20BalanceSlot {
@@ -56,25 +62,13 @@ pub fn get_erc20_balance_slot(
         }
     }
 
-    let balanceof_calldata = ERC20::balanceOfCall { owner: user }.abi_encode();
     let state = config.get_latest_state();
-    let db = CacheDB::new(StateProviderDatabase::new(state));
-    let mut state = StateBuilder::new_with_database(db).build();
+    let mut db = CacheDB::new(StateProviderDatabase::new(state));
 
-    let mut evm = Context::mainnet()
-        .with_db(&mut state)
-        .modify_tx_chained(|tx| {
-            tx.caller = address!("0000000000000000000000000000000000000000");
-            tx.kind = TxKind::Call(token);
-            tx.data = balanceof_calldata.into();
-        })
-        .build_mainnet();
-
-    let ref_tx = evm.replay().unwrap();
+    let (_, touched_state) = get_erc20_balance(&mut db, token, user);
 
     let min_slot = U256::from(1) << U256::from(128);
-    let touched_slots: Vec<Slot> = ref_tx
-        .state
+    let touched_slots: Vec<Slot> = touched_state
         .iter()
         .flat_map(|(address, account)| {
             account
@@ -112,28 +106,7 @@ pub fn get_erc20_balance_slot(
             .insert_account_storage(*contract, *slot, fake_balance)
             .unwrap();
 
-        let state = StateBuilder::new_with_database(cache_db).build();
-
-        let encoded = balanceOfCall { owner: user }.abi_encode();
-
-        let mut evm = Context::mainnet()
-            .with_db(state)
-            .modify_tx_chained(|tx| {
-                tx.caller = address!("0000000000000000000000000000000000000001");
-                tx.kind = TxKind::Call(token);
-                tx.data = encoded.into();
-            })
-            .build_mainnet();
-
-        let ref_tx = evm.replay().unwrap();
-        let result = ref_tx.result;
-
-        let balance = match result {
-            ExecutionResult::Success { output, .. } => {
-                U256::abi_decode(output.data(), false).unwrap_or(U256::ZERO)
-            }
-            _ => continue,
-        };
+        let (balance, _) = get_erc20_balance(&mut cache_db, token, user);
 
         if balance > best_slot.1 {
             best_slot = (Some((*contract, *slot)), balance)
@@ -161,18 +134,35 @@ pub fn get_erc20_balance_slot(
             ))
         }
     }
-
-    //let storage_slot = FixedBytes::from_slice(best_slot.1.as_le_slice());
-    //let mapping_slot = get_mapping_slot(user_bytes32, storage_slot);
-    //
-    //return Ok(Erc20BalanceSlot {
-    //    address: best_slot.0.unwrap().0,
-    //    slot: storage_slot,
-    //    mapping_slot,
-    //});
 }
 
-//fn get_balance(
+fn get_erc20_balance(
+    cache_db: &mut RevmDb,
+    token: Address,
+    user: Address,
+) -> (U256, HashMap<Address, Account, RandomState>) {
+    let state = StateBuilder::new_with_database(cache_db).build();
+    let encoded = balanceOfCall { owner: user }.abi_encode();
+
+    let mut evm = Context::mainnet()
+        .with_db(state)
+        .modify_tx_chained(|tx| {
+            tx.caller = address!("0000000000000000000000000000000000000001");
+            tx.kind = TxKind::Call(token);
+            tx.data = encoded.into();
+        })
+        .build_mainnet();
+
+    let ref_tx = evm.replay().unwrap();
+
+    match ref_tx.result {
+        ExecutionResult::Success { output, .. } => (
+            U256::abi_decode(output.data(), false).unwrap_or(U256::ZERO),
+            ref_tx.state,
+        ),
+        _ => (U256::ZERO, ref_tx.state),
+    }
+}
 
 fn get_mapping_slot(user_bytes32: B256, storage_slot: B256) -> Option<U256> {
     for i in 0..20 {
