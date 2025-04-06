@@ -24,9 +24,12 @@ fn main() -> eyre::Result<()> {
     let config = Config::new(Path::new(&db_path))?;
 
     // USDC
-    let erc20 = address!("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48");
+    //let erc20 = address!("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48");
+    let erc20 = address!("c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2");
+
     let mut total_duration = Duration::ZERO;
     let mut successful = 0;
+    let mut first_call_duration = Duration::ZERO;
 
     for i in 0..100 {
         let random_user = Address::random();
@@ -37,6 +40,9 @@ fn main() -> eyre::Result<()> {
                 let elapsed = start_t.elapsed();
                 println!("#{i:03} time taken: {:?}", elapsed);
                 total_duration += elapsed;
+                if first_call_duration.is_zero() {
+                    first_call_duration = elapsed;
+                }
                 successful += 1;
             }
             Err(err) => {
@@ -49,6 +55,7 @@ fn main() -> eyre::Result<()> {
         let avg = total_duration / successful;
         println!("\n✅ Successful queries: {successful}");
         println!("⏱ Total time: {:?}", total_duration);
+        println!("⏱ First call time: {:?}", first_call_duration);
         println!("📊 Average time per successful call: {:?}", avg);
     }
 

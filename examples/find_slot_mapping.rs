@@ -46,6 +46,7 @@ fn main() -> eyre::Result<()> {
             Ok(_slot) => {
                 let elapsed = start_t.elapsed();
                 println!("#{i:03} time taken: {:?}", elapsed);
+
                 total_duration += elapsed;
                 successful += 1;
             }

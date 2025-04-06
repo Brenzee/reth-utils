@@ -10,16 +10,18 @@ Token: WETH (only 1 storage slot touched)
 
 ```
 ✅ Successful queries: 100
-⏱ Total time: 10.738619ms
-📊 Average time per successful call: 107.386µs
+⏱ Total time: 11.271966ms
+⏱ First call time: 238.797µs
+📊 Average time per successful call: 112.719µs
 ```
 
 Token: USDC (multiple storage slots touched, determines the best one)
 
 ```
 ✅ Successful queries: 100
-⏱ Total time: 18.281425ms
-📊 Average time per successful call: 182.814µs
+⏱ Total time: 18.260411ms
+⏱ First call time: 470.98µs
+📊 Average time per successful call: 182.604µs
 ```
 
 #### `find_slot_mapping` example
